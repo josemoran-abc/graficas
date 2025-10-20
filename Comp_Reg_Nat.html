@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regeneración natural (individuos)</title>
+
+  <!-- Chart.js + plugin de etiquetas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0e11;
+      --card:#141922;
+      --ink:#e9eef5;
+      --muted:#97a3b6;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0; padding:24px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      background:var(--bg); color:var(--ink);
+    }
+    .card{
+      max-width:900px; margin:0 auto; background:var(--card);
+      border-radius:16px; padding:18px; box-shadow:0 6px 20px rgba(0,0,0,.35);
+    }
+    h1{font-size:1.1rem; margin:.2rem 0 .35rem}
+    p.desc{margin:0 0 .6rem; color:var(--muted); font-size:.94rem}
+    canvas{width:100% !important; height:420px !important;}
+    /* Cursor tipo "mano" al pasar por encima de la barra */
+    #graficaRegeneracion { cursor: default; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Composición · Regeneración natural (individuos)</h1>
+    <p class="desc">Conteo de individuos por año de evaluación. Pase el cursor sobre cada barra para ver el valor y resaltar el año.</p>
+    <canvas id="graficaRegeneracion" aria-label="Regeneración natural por año" role="img"></canvas>
+  </div>
+
+  <script>
+    // ===== Datos (edítelos si necesita actualizar) =====
+    const datosRegeneracion = [
+      { anio: 2017, individuos: 2185 },
+      { anio: 2020, individuos: 2721 },
+      { anio: 2024, individuos: 2893 }
+    ];
+
+    // Colores base y de hover para cada barra
+    const baseColors  = ['rgba(74,163,255,0.85)','rgba(74,163,255,0.85)','rgba(74,163,255,0.85)'];
+    const hoverColors = ['rgba(43,182,115,0.95)','rgba(242,177,52,0.95)','rgba(224,93,93,0.95)'];
+
+    // ===== Configuración de la gráfica =====
+    Chart.register(ChartDataLabels);
+
+    const ctx = document.getElementById('graficaRegeneracion');
+
+    // Usamos colores "scriptables" para cambiar al pasar el puntero
+    const backgroundColor = (ctxBar) => {
+      const i = ctxBar.dataIndex;
+      // ctxBar.active es true cuando el elemento está en hover
+      return ctxBar.active ? hoverColors[i] : baseColors[i];
+    };
+    const borderColor = (ctxBar) => {
+      const i = ctxBar.dataIndex;
+      return ctxBar.active ? hoverColors[i].replace('0.95','1') : 'rgba(74,163,255,1)';
+    };
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: datosRegeneracion.map(d => d.anio),
+        datasets: [{
+          label: 'Individuos',
+          data: datosRegeneracion.map(d => d.individuos),
+          backgroundColor,
+          borderColor,
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: true },
+        scales: {
+          x: {
+            ticks: { color: '#dbe7ff' },
+            grid: { color: 'rgba(255,255,255,.07)' }
+          },
+          y: {
+            ticks: {
+              color: '#dbe7ff',
+              callback: (v) => new Intl.NumberFormat('es-CO').format(v)
+            },
+            grid: { color: 'rgba(255,255,255,.07)' }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e9eef5' } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${new Intl.NumberFormat('es-CO').format(ctx.raw)} individuos`
+            }
+          },
+          datalabels: {
+            color: '#e9eef5',
+            anchor: 'end',
+            align: 'top',
+            font: { weight: '600', size: 11 },
+            formatter: (v) => new Intl.NumberFormat('es-CO').format(v)
+          }
+        },
+        // Cambia el cursor a "pointer" al entrar sobre una barra
+        onHover: (event, elements) => {
+          const el = event.native ? event.native.target : event.chart.canvas;
+          el.style.cursor = elements.length ? 'pointer' : 'default';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
